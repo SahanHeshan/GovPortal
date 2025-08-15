@@ -13,8 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAppDispatch } from "@/hooks/redux";
 import { login } from "@/store/authSlice";
-
-const govUrl = import.meta.env.VITE_GOV_URL;
+import { loginGov } from "@/api/gov";
 
 export function Login() {
   const [formData, setFormData] = useState({
@@ -26,85 +25,44 @@ export function Login() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  //api have been moved to /api
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.officeId || !formData.password || !formData.captcha) return;
 
-    void (async () => {
-      type ApiSuccess = {
-        category_id?: number;
-        created_at?: string;
-        description_en?: string;
-        description_si?: string;
-        description_ta?: string;
-        email?: string;
-        id: number;
-        location?: string;
-        name_en?: string;
-        name_si?: string;
-        name_ta?: string;
-        role?: string;
-        username: string;
-      };
+    try {
+      const { data } = await loginGov({
+        username: formData.officeId,
+        password: formData.password,
+      });
 
-      type ApiError422 = {
-        detail: { loc: (string | number)[]; msg: string; type: string }[];
-      };
+      dispatch(
+        login({
+          id: data.id,
+          username: data.username,
+          role: data.role,
+          email: data.email,
+          location: data.location,
+          category_id: data.category_id,
+          created_at: data.created_at,
+          name_en: data.name_en,
+          name_si: data.name_si,
+          name_ta: data.name_ta,
+          description_en: data.description_en,
+          description_si: data.description_si,
+          description_ta: data.description_ta,
+          access_token: data.access_token,
+          token_type: data.token_type,
+        })
+      );
 
-      try {
-        const res = await fetch(govUrl + "/api/v1/gov/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            grant_type: "password",
-            username: formData.officeId,
-            password: formData.password,
-          }),
-        });
-
-        if (res.status === 422) {
-          const err: ApiError422 = await res.json();
-          const msg =
-            err.detail?.map((d) => d.msg).join(", ") || "Validation error";
-          console.log(msg);
-          return;
-        }
-
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text || `HTTP ${res.status}`);
-        }
-
-        const data: ApiSuccess = await res.json();
-
-        dispatch(
-          login({
-            id: data.id,
-            username: data.username,
-            officeId: data.username ?? formData.officeId,
-            officeName: data.name_en ?? "Government Node",
-            role: data.role,
-            email: data.email,
-            location: data.location,
-            category_id: data.category_id,
-            created_at: data.created_at,
-            name_en: data.name_en,
-            name_si: data.name_si,
-            name_ta: data.name_ta,
-            description_en: data.description_en,
-            description_si: data.description_si,
-            description_ta: data.description_ta,
-          })
-        );
-        navigate("/dashboard");
-      } catch (err) {
-        console.log(err);
-        window.alert("Login failed. Please try again.");
-      }
-    })();
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      window.alert("Login failed. Please try again.");
+    }
   };
+  //api section over
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

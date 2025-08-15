@@ -1,8 +1,11 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.error(
@@ -14,11 +17,21 @@ const NotFound = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">Oops! Page not found</p>
-        <a href="/" className="text-blue-500 hover:text-blue-700 underline">
-          Return to Home
-        </a>
+        <CardHeader className="text-center">
+          <div className="flex justify-center items-center gap-3 mb-4">
+            <img src="/logo.png" alt="Logo" className="h-16 max-[425px]:h-8" />
+          </div>
+          <CardTitle className="text-xl font-semibold text-foreground">
+            Page not found - 404
+          </CardTitle>
+          <Button
+            variant="government"
+            className="w-full"
+            onClick={() => navigate("/dashboard")}
+          >
+            Return to Home Page
+          </Button>
+        </CardHeader>
       </div>
     </div>
   );

@@ -24,12 +24,18 @@ jobs:
 
       - name: Append Custom Environment Secrets
         run: |
-           echo "VITE_GOV_URL=${{ secrets.VITE_GOV_URL }}" >> .env
+          echo "VITE_GOV_URL=${{ secrets.VITE_GOV_URL }}" >> .env
 
-      # Step 5: Build the project artifacts.
+      # Clean install to avoid Rollup native dependency bug
+      - name: Clean and Install Dependencies
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install --include=optional
+
+      # Build the project artifacts
       - name: Build Project Artifacts
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
-      # Step 6: Deploy the prebuilt project artifacts to Vercel.
+      # Deploy the prebuilt project artifacts to Vercel
       - name: Deploy Project Artifacts to Vercel
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

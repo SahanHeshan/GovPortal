@@ -1,5 +1,5 @@
 import { api } from "@/api/index";
-import type { LoginRequest, LoginResponse, TimeSlot } from "@/api/interfaces";
+import type { LoginRequest, LoginResponse } from "@/api/interfaces";
 
 //api 1
 export const loginGov = (payload: LoginRequest) =>
@@ -24,5 +24,3 @@ export const serviceSlots = (
   api.get(
     `/api/v1/appointments/available_slots/${reservation_id}/${reservation_date}`
   );
-
-

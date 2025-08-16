@@ -67,6 +67,7 @@ export interface ReservedUser {
   slot_id: number;
 }
 
+
 export interface Service {
   service_id?: number;
   created_at?: string;
@@ -117,6 +118,7 @@ export interface DocumentType {
   description_si: string;
   description_ta: string;
 }
+
 
 // Analytics
 export interface MostReservedSlotItem {

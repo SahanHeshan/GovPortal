@@ -4,10 +4,12 @@ import type {
   LoginResponse,
   Citizen,
   ReservedUser,
+  ActivateUserResponse,
   MostReservedSlotItem,
   PercentageChangeResponse,
   TodayCountResponse,
   OverallSatisfactionItem,
+
 } from "@/api/interfaces";
 
 //api 1
@@ -40,11 +42,13 @@ export const getReservedUsers = (slot_id: string | number) =>
     `/api/v1/appointments/reserved_user/get_users/${slot_id}`
   );
 
+
 // analytics
 export const getMostReservedSlot = (service_id: number | string) =>
   api.get<MostReservedSlotItem[]>(
     `/api/v1/analytics/appointments/most_reserved_slot/${service_id}`
   );
+
 
 export const getAppointmentsPercentageChange = (
   service_id: number | string

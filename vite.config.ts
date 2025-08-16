@@ -6,16 +6,15 @@ import path from "path";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 4173,
   },
   preview: {
     host: "0.0.0.0",
     port: 4173,
     allowedHosts: [
-      "localhost",
-      "127.0.0.1",
       "govconn-portal.ambitioustree-9332536f.eastasia.azurecontainerapps.io",
-      ".azurecontainerapps.io", // Allow all Azure Container Apps domains
+      ".azurecontainerapps.io",
+      "all", // Allow all Azure Container Apps domains
     ],
   },
   plugins: [react()],

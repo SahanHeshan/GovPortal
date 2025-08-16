@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Settings, Clock, Edit, Trash2, Plus, Calendar as CalendarIcon, Filter, X } from "lucide-react";
 import { getAvailableSlots, deleteTimeSlot } from "@/api/manage";
 import { TimeSlot } from "@/api/interfaces";
@@ -25,6 +26,11 @@ const ConfigSlotList = (props: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [showDateFilter, setShowDateFilter] = useState(false);
+  // Deletion dialog state
+  const [selectedDeleteId, setSelectedDeleteId] = useState<number | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const filterSlotsByDate = useCallback((slotsToFilter: TimeSlot[], filterDate?: Date) => {
     if (!filterDate) {
@@ -75,24 +81,28 @@ const ConfigSlotList = (props: Props) => {
     setShowDateFilter(false);
   };
 
-  const handleDeleteSlot = async (slotId: number) => {
-    if (!window.confirm('Are you sure you want to delete this time slot?')) {
-      return;
-    }
-    
+  const openDeleteDialog = (slotId: number) => {
+    setSelectedDeleteId(slotId);
+    setDeleteError(null);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteSlot = async () => {
+    if (!selectedDeleteId) return;
     try {
-      setLoading(true);
-      await deleteTimeSlot(slotId);
+      setDeleting(true);
+      setDeleteError(null);
+      await deleteTimeSlot(selectedDeleteId);
       // Refresh the slots list after deletion
       await fetchSlots();
+      setIsDeleteDialogOpen(false);
+      setSelectedDeleteId(null);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error 
-        ? err.message 
-        : "Failed to delete slot";
-      setError(errorMessage);
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete slot";
+      setDeleteError(errorMessage);
       console.error("Error deleting slot:", err);
     } finally {
-      setLoading(false);
+      setDeleting(false);
     }
   };
 
@@ -272,7 +282,7 @@ const ConfigSlotList = (props: Props) => {
                             variant="outline" 
                             size="sm"
                             className="text-red-600 hover:text-red-800"
-                            onClick={() => handleDeleteSlot(slot.slot_id)}
+                            onClick={() => openDeleteDialog(slot.slot_id)}
                             disabled={loading}
                           >
                             <Trash2 className="h-3 w-3" />
@@ -287,6 +297,28 @@ const ConfigSlotList = (props: Props) => {
           )}
         </div>
       </CardContent>
+      {/* Delete confirmation dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete time slot</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this time slot? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError && (
+            <p className="text-sm text-red-600 mb-2">{deleteError}</p>
+          )}
+          <DialogFooter className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button onClick={confirmDeleteSlot} className="bg-red-600 text-white" disabled={deleting}>
+              {deleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

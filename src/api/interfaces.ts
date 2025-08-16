@@ -20,3 +20,15 @@ export interface LoginResponse {
   access_token: string;
   token_type: string;
 }
+
+export interface TimeSlot {
+  slot_id: number;
+  reservation_id: number;
+  start_time: string;
+  end_time: string;
+  max_capacity: number;
+  reserved_count: number;
+  status: string;
+  booking_date: string;
+  recurrent_count: number;
+}

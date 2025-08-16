@@ -11,10 +11,10 @@ export default defineConfig(({ mode }) => ({
   preview: {
     host: "0.0.0.0",
     port: 4173,
+    // Only allow your Azure Container App domain and all subdomains of azurecontainerapps.io
     allowedHosts: [
       "govconn-portal.ambitioustree-9332536f.eastasia.azurecontainerapps.io",
       ".azurecontainerapps.io",
-      "all", // Allow all Azure Container Apps domains
     ],
   },
   plugins: [react()],

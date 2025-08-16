@@ -38,3 +38,23 @@ export interface ReservedUser {
   reference_id: number;
   slot_id: number;
 }
+
+// Analytics
+export interface MostReservedSlotItem {
+  booking_date: string;
+  max_reserved: number;
+  start_time: string;
+}
+
+export interface PercentageChangeResponse {
+  percentage_change: number;
+}
+
+export interface TodayCountResponse {
+  today_count: number;
+}
+
+export interface OverallSatisfactionItem {
+  category_en: string;
+  avg_rating: number;
+}

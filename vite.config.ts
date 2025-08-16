@@ -6,11 +6,11 @@ import path from "path";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 4173,
+    port: 8080,
   },
   preview: {
     host: "0.0.0.0",
-    port: 4173,
+    port: 8080,
     // Only allow your Azure Container App domain and all subdomains of azurecontainerapps.io
     allowedHosts: [
       "govconn-portal.ambitioustree-9332536f.eastasia.azurecontainerapps.io",

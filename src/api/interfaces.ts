@@ -21,6 +21,17 @@ export interface LoginResponse {
   token_type: string;
 }
 
+export interface TimeSlot {
+  slot_id: number;
+  reservation_id: number;
+  start_time: string;
+  end_time: string;
+  max_capacity: number;
+  reserved_count: number;
+  status: string;
+  booking_date: string;
+  recurrent_count: number;
+}
 export interface Citizen {
   first_name: string;
   last_name: string;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -17,6 +17,8 @@ import {
   Phone,
   Mail,
   FileText,
+  IdCard,
+  QrCode,
 } from "lucide-react";
 import { ReservedUser } from "@/api/interfaces";
 import { getReservedUsers } from "@/api/gov";
@@ -26,6 +28,13 @@ export function AppointmentDetails() {
     serviceId: string;
     timeSlot: string;
   }>();
+  const location = useLocation();
+
+  const { serviceName, slotTime } =
+    (location.state as {
+      serviceName?: string;
+      slotTime?: string;
+    }) || {};
 
   const [reservedUsers, setReservedUsers] = useState<ReservedUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,18 +64,62 @@ export function AppointmentDetails() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Service {serviceId}
-          </h1>
+          <h1 className="text-3xl font-bold text-foreground">{serviceName}</h1>
           <p className="text-muted-foreground flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            {timeSlot.replace(/-/g, " ").toUpperCase()} Time Slot
+            {slotTime.replace(/-/g, " ").toUpperCase()} Time Slot
           </p>
         </div>
       </div>
 
       {loading ? (
-        <div>Loading appointments...</div>
+        <Card>
+          <CardContent className="space-y-4 py-8">
+            <div className="flex items-center gap-3">
+              <Calendar className="h-6 w-6 text-muted-foreground animate-spin" />
+              <div>
+                <h3 className="text-lg font-medium text-foreground">
+                  Loading appointments
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Fetching appointments for this time slot…
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="p-4 border rounded-md bg-muted/10 animate-pulse"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-muted/20" />
+                      <div className="space-y-2">
+                        <div className="h-4 w-40 bg-muted/20 rounded" />
+                        <div className="h-3 w-28 bg-muted/20 rounded" />
+                      </div>
+                    </div>
+                    <div className="h-4 w-20 bg-muted/20 rounded" />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <div className="h-3 w-32 bg-muted/20 rounded" />
+                      <div className="h-3 w-40 bg-muted/20 rounded" />
+                      <div className="h-3 w-28 bg-muted/20 rounded" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-3 w-full bg-muted/20 rounded" />
+                      <div className="h-12 w-full bg-muted/20 rounded" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       ) : error ? (
         <div>{error}</div>
       ) : reservedUsers.length === 0 ? (
@@ -86,7 +139,7 @@ export function AppointmentDetails() {
       ) : (
         <>
           {reservedUsers.map(({ citizen, reference_id }) => {
-            const documents = citizen?.document_link || [];
+            // const documents = citizen?.document_links || [];
             return (
               <Card key={reference_id}>
                 <CardHeader>
@@ -101,16 +154,23 @@ export function AppointmentDetails() {
                         </CardTitle>
                         <CardDescription className="flex items-center gap-2">
                           <Clock className="h-3 w-3" />
-                          {timeSlot.replace(/-/g, " ").toUpperCase()}
+                          <label className="text-muted-foreground">
+                            Placed On:
+                          </label>
+                          {(() => {
+                            const raw = citizen.created_at ?? "";
+                            const normalized = raw.replace(
+                              /(\.\d{3})\d+$/,
+                              "$1"
+                            ); // keep milliseconds
+                            const d = new Date(normalized);
+                            return isNaN(d.getTime())
+                              ? raw
+                              : d.toLocaleString();
+                          })()}
                         </CardDescription>
                       </div>
                     </div>
-                    <Badge
-                      variant="secondary"
-                      className="bg-success/20 text-success"
-                    >
-                      Active
-                    </Badge>
                   </div>
                 </CardHeader>
 
@@ -125,32 +185,63 @@ export function AppointmentDetails() {
                         <Mail className="h-4 w-4 text-muted-foreground" />
                         <span className="text-foreground">{citizen.email}</span>
                       </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <IdCard className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-foreground">{citizen.nic}</span>
+                      </div>
+                      <br />
+                      <div className="flex items-center gap-2 text-sm">
+                        <QrCode className="h-4 w-4 text-muted-foreground" />
+                        <label className="text-foreground">Reference ID:</label>
+                        <span className="text-foreground">{reference_id}</span>
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        className={
+                          citizen.active
+                            ? "bg-success/20 text-success"
+                            : "bg-destructive/20 text-destructive"
+                        }
+                      >
+                        {citizen.active ? "Confirmed" : "Canceled"}
+                      </Badge>
                     </div>
 
                     <div className="space-y-2">
                       <div className="flex items-start gap-2 text-sm">
                         <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
-                        <div>
-                          <span className="text-muted-foreground">
+                        <div className="w-full">
+                          <span className="text-muted-foreground font-medium">
                             Documents:
                           </span>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {documents.map((doc, index) => (
-                              <Badge
+                          <ul className="mt-2 space-y-2">
+                            {citizen.document_links?.map((doc, index) => (
+                              <li
                                 key={index}
-                                variant="outline"
-                                className="text-xs"
+                                className="flex items-center justify-between p-2 border rounded-md hover:bg-muted/30"
                               >
-                                <a
-                                  href={doc.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
+                                <span className="truncate text-foreground">
                                   {doc.title}
-                                </a>
-                              </Badge>
+                                </span>
+                                <Button
+                                  asChild
+                                  size="sm"
+                                  variant="outline"
+                                  className="flex items-center gap-1"
+                                >
+                                  <a
+                                    href={doc.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download
+                                  >
+                                    <FileText className="h-4 w-4" />
+                                    Download
+                                  </a>
+                                </Button>
+                              </li>
                             ))}
-                          </div>
+                          </ul>
                         </div>
                       </div>
                     </div>

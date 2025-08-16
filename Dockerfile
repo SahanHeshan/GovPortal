@@ -1,24 +1,15 @@
-# Stage 1: Build Vite frontend
-FROM node:20-alpine AS builder
+FROM node:18-alpine
+
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm ci
+COPY package.json .
+
+RUN npm install
 
 COPY . .
+
 RUN npm run build
 
-# Stage 2: Serve with Nginx
-FROM nginx:stable-alpine
+EXPOSE 4173
 
-# Remove default Nginx files
-RUN rm -rf /usr/share/nginx/html/*
-
-# Copy built frontend
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Optional: custom nginx config for SPA routing
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD [ "npm", "run", "preview"]

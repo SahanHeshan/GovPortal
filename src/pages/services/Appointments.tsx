@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Card,
@@ -8,60 +8,67 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Users, ArrowRight } from "lucide-react";
-import { getGovServices } from "@/api/gov";
-
-// Call API when the page (module) loads
-const fetchGovServicesOnLoad = async () => {
-  try {
-    const { data } = await getGovServices();
-    console.log(data);
-    // TODO: set state or dispatch data to store
-  } catch (err) {
-    console.error(err);
-  }
-};
-fetchGovServicesOnLoad();
-
-// Dummy data for services and time slots
-const services = [
-  {
-    id: "birth-cert",
-    name: "Birth Certificate",
-    description: "Official birth certificate issuance",
-    slots: [
-      { time: "09:00 AM", Booked: 5, total: 10 },
-      { time: "10:00 AM", Booked: 0, total: 10 },
-      { time: "11:00 AM", Booked: 10, total: 10 },
-      { time: "02:00 PM", Booked: 8, total: 10 },
-    ],
-  },
-  {
-    id: "marriage-cert",
-    name: "Marriage Certificate",
-    description: "Official marriage certificate issuance",
-    slots: [
-      { time: "09:00 AM", Booked: 3, total: 8 },
-      { time: "10:00 AM", Booked: 0, total: 8 },
-      { time: "11:00 AM", Booked: 4, total: 8 },
-      { time: "02:00 PM", Booked: 10, total: 8 },
-    ],
-  },
-  {
-    id: "business-license",
-    name: "Business License",
-    description: "New business registration and licensing",
-    slots: [
-      { time: "09:00 AM", Booked: 2, total: 6 },
-      { time: "10:00 AM", Booked: 0, total: 6 },
-      { time: "02:00 PM", Booked: 3, total: 6 },
-      { time: "03:00 PM", Booked: 1, total: 6 },
-    ],
-  },
-];
+import { getGovServices, serviceSlots } from "@/api/gov";
 
 export function Appointments() {
+  const [services, setServices] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchGovServices = async () => {
+      const userString =
+        typeof window !== "undefined" ? localStorage.getItem("user") : null;
+      const user = userString ? JSON.parse(userString) : null;
+
+      if (!user?.id) {
+        console.warn("No user found, skipping gov services fetch.");
+        return;
+      }
+
+      try {
+        const { data: services } = await getGovServices(user.id);
+
+        const today = new Date();
+        const localToday = today.toLocaleDateString("en-CA");
+
+        const withSlots = await Promise.all(
+          services.map(async (service: any) => {
+            try {
+              const { data: slotsData } = await serviceSlots(
+                service.service_id,
+                localToday
+              );
+
+              const formattedSlots = slotsData.map((slot: any) => ({
+                time: new Date(slot.start_time).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+                Booked: slot.reserved_count,
+                total: slot.max_capacity,
+                status: slot.status,
+              }));
+
+              return { ...service, slots: formattedSlots };
+            } catch (slotErr) {
+              console.error(
+                `Error fetching slots for service ${service.reservation_id}:`,
+                slotErr
+              );
+              return { ...service, slots: [] };
+            }
+          })
+        );
+
+        setServices(withSlots);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchGovServices();
+  }, []);
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -71,25 +78,27 @@ export function Appointments() {
         <p className="text-muted-foreground">Manage service appointments</p>
       </div>
 
-      {/* Services Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {services.map((service) => (
-          <Card key={service.id} className="hover:shadow-md transition-shadow">
+          <Card
+            key={service.service_id}
+            className="hover:shadow-md transition-shadow"
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
-                {service.name}
+                {service.service_name_en}
               </CardTitle>
-              <CardDescription>{service.description}</CardDescription>
+              <CardDescription>{service.description_en}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 {service.slots.map((slot, index) => (
                   <Link
                     key={index}
-                    to={`/services/appointments/${service.id}/${slot.time
-                      .replace(/[:\s]/g, "-")
-                      .toLowerCase()}`}
+                    to={`/services/appointments/${
+                      service.service_id
+                    }/${slot.time.replace(/[:\s]/g, "-").toLowerCase()}`}
                     className="block"
                   >
                     <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">

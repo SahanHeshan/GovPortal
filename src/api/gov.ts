@@ -13,4 +13,14 @@ export const loginGov = (payload: LoginRequest) =>
   );
 
 //api 2
-export const getGovServices = () => api.get("/api/v1/gov/services/");
+export const getGovServices = (officeID: number) =>
+  api.get(`/api/v1/gov/services/${officeID}`);
+
+//api3
+export const serviceSlots = (
+  reservation_id: number,
+  reservation_date: string
+) =>
+  api.get(
+    `/api/v1/appointments/available_slots/${reservation_id}/${reservation_date}`
+  );

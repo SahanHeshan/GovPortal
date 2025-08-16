@@ -40,3 +40,25 @@ export const getReservedUsers = (slot_id: string | number) =>
 
 
 
+// analytics
+export const getMostReservedSlot = (service_id: number | string) =>
+  api.get<MostReservedSlotItem[]>(
+    `/api/v1/analytics/appointments/most_reserved_slot/${service_id}`
+  );
+
+export const getAppointmentsPercentageChange = (
+  service_id: number | string
+) =>
+  api.get<PercentageChangeResponse>(
+    `/api/v1/analytics/appointments/percentage_change/${service_id}`
+  );
+
+export const getAppointmentsTodayCount = (service_id: number | string) =>
+  api.get<TodayCountResponse>(
+    `/api/v1/analytics/appointments/today_count/${service_id}`
+  );
+
+export const getOverallSatisfaction = () =>
+  api.get<OverallSatisfactionItem[]>(
+    `/api/v1/analytics/services/overall_satisfaction/`
+  );

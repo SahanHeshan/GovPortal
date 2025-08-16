@@ -103,7 +103,9 @@ export function Dashboard() {
   ]);
 
   const [serviceId, setServiceId] = useState<number | null>(null);
-  const [mostSeries, setMostSeries] = useState<{ date: string; max_reserved: number }[]>([]);
+  const [mostSeries, setMostSeries] = useState<
+    { date: string; max_reserved: number }[]
+  >([]);
 
   const user = useMemo(() => {
     const userString =
@@ -116,8 +118,7 @@ export function Dashboard() {
     const pickServiceId = async () => {
       // 1) Try localStorage cached services
       const stored =
-        typeof window !== "undefined" ? localStorage.getItem("services") :
-        null;
+        typeof window !== "undefined" ? localStorage.getItem("services") : null;
       if (stored) {
         try {
           const services = JSON.parse(stored);
@@ -147,12 +148,13 @@ export function Dashboard() {
     const fetchAnalytics = async () => {
       if (!serviceId) return;
       try {
-        const [todayRes, changeRes, mostRes, satisfactionRes] = await Promise.all([
-          getAppointmentsTodayCount(serviceId),
-          getAppointmentsPercentageChange(serviceId),
-          getMostReservedSlot(serviceId),
-          getOverallSatisfaction(),
-        ]);
+        const [todayRes, changeRes, mostRes, satisfactionRes] =
+          await Promise.all([
+            getAppointmentsTodayCount(serviceId),
+            getAppointmentsPercentageChange(serviceId),
+            getMostReservedSlot(serviceId),
+            getOverallSatisfaction(),
+          ]);
 
         const todayCount = todayRes.data.today_count ?? 0;
         const pct = Number(changeRes.data.percentage_change ?? 0);
@@ -200,11 +202,16 @@ export function Dashboard() {
           mostLabel = `${startLabel} - ${endLabel}`;
         }
         const mostChange = most ? `${most.max_reserved} reserved` : "";
-        const mostDesc = most ? `${most.booking_date}` : "Time with highest reservations";
+        const mostDesc = most
+          ? `${most.booking_date}`
+          : "Time with highest reservations";
 
-        const sat = Array.isArray(satisfactionRes.data) ? satisfactionRes.data : [];
+        const sat = Array.isArray(satisfactionRes.data)
+          ? satisfactionRes.data
+          : [];
         const overallAvg = sat.length
-          ? (sat.reduce((acc, it) => acc + (Number(it.avg_rating) || 0), 0) / sat.length)
+          ? sat.reduce((acc, it) => acc + (Number(it.avg_rating) || 0), 0) /
+            sat.length
           : 0;
 
         const newStats: StatItem[] = [
@@ -281,13 +288,17 @@ export function Dashboard() {
                   {stat.change && (
                     <span
                       className={
-                        stat.trend === "up" ? "text-success" : "text-destructive"
+                        stat.trend === "up"
+                          ? "text-success"
+                          : "text-destructive"
                       }
                     >
                       {stat.change}
                     </span>
                   )}
-                  {stat.description && <span className="ml-1">{stat.description}</span>}
+                  {stat.description && (
+                    <span className="ml-1">{stat.description}</span>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -383,8 +394,15 @@ export function Dashboard() {
                     tickMargin={8}
                   />
                   <YAxis tickLine={false} axisLine={false} width={32} />
-                  <ChartTooltip cursor={false} content={<ChartTooltipContent nameKey="max_reserved" />} />
-                  <Bar dataKey="max_reserved" fill="var(--color-max_reserved)" radius={4} />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent nameKey="max_reserved" />}
+                  />
+                  <Bar
+                    dataKey="max_reserved"
+                    fill="var(--color-max_reserved)"
+                    radius={4}
+                  />
                   <ChartLegend content={<ChartLegendContent />} />
                 </BarChart>
               </ChartContainer>

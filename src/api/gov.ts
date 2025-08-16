@@ -4,10 +4,12 @@ import type {
   LoginResponse,
   Citizen,
   ReservedUser,
+  ActivateUserResponse,
   MostReservedSlotItem,
   PercentageChangeResponse,
   TodayCountResponse,
   OverallSatisfactionItem,
+
 } from "@/api/interfaces";
 
 //api 1

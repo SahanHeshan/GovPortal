@@ -6,11 +6,29 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Settings, Clock, Edit, Trash2, Plus, Calendar as CalendarIcon, Filter, X } from "lucide-react";
 import { getAvailableSlots, deleteTimeSlot } from "@/api/manage";
+import { getGovServices } from "@/api/gov";
 import { TimeSlot } from "@/api/interfaces";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+
+interface Service {
+  service_id: number;
+  gov_node_id: number;
+  service_type: string;
+  service_name_si: string;
+  service_name_en: string;
+  service_name_ta: string;
+  description_si: string;
+  description_en: string;
+  description_ta: string;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+  required_document_types: number[];
+}
 
 type Props = {
     categoryId: number;
@@ -26,6 +44,9 @@ const ConfigSlotList = (props: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [showDateFilter, setShowDateFilter] = useState(false);
+  const [services, setServices] = useState<Service[]>([]);
+  const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
+  const [servicesLoading, setServicesLoading] = useState(false);
   // Deletion dialog state
   const [selectedDeleteId, setSelectedDeleteId] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -47,14 +68,34 @@ const ConfigSlotList = (props: Props) => {
     setFilteredSlots(filtered);
   }, []);
 
+  const applyFilters = useCallback((slotsToFilter: TimeSlot[]) => {
+    let filtered = [...slotsToFilter];
+
+    // Apply service filter
+    if (selectedServiceId) {
+      filtered = filtered.filter(slot => slot.reservation_id === selectedServiceId);
+    }
+
+    // Apply date filter
+    if (selectedDate) {
+      const filterDateStr = format(selectedDate, "yyyy-MM-dd");
+      filtered = filtered.filter(slot => {
+        const slotDateStr = format(new Date(slot.booking_date), "yyyy-MM-dd");
+        return slotDateStr === filterDateStr;
+      });
+    }
+
+    setFilteredSlots(filtered);
+  }, [selectedDate, selectedServiceId]);
+
   const fetchSlots = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await getAvailableSlots(props.categoryId);
+      const response = await getAvailableSlots(selectedServiceId || 1);
       setSlots(response.data);
-      // Apply current filter after fetching
-      filterSlotsByDate(response.data, selectedDate);
+      // Apply current filters after fetching
+      applyFilters(response.data);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error 
         ? err.message 
@@ -64,12 +105,25 @@ const ConfigSlotList = (props: Props) => {
     } finally {
       setLoading(false);
     }
-  }, [props.categoryId, selectedDate, filterSlotsByDate]);
+  }, [selectedServiceId, applyFilters]);
 
-  // Update filtered slots when date selection changes
+  const fetchServices = useCallback(async () => {
+    try {
+      setServicesLoading(true);
+      const response = await getGovServices(props.categoryId);
+      setServices(response.data);
+    } catch (err: unknown) {
+      console.error("Error fetching services:", err);
+      // Don't set error here as services are optional for viewing
+    } finally {
+      setServicesLoading(false);
+    }
+  }, [props.categoryId]);
+
+  // Update filtered slots when filters change
   useEffect(() => {
-    filterSlotsByDate(slots, selectedDate);
-  }, [slots, selectedDate, filterSlotsByDate]);
+    applyFilters(slots);
+  }, [slots, selectedDate, selectedServiceId, applyFilters]);
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
@@ -78,6 +132,16 @@ const ConfigSlotList = (props: Props) => {
 
   const clearDateFilter = () => {
     setSelectedDate(undefined);
+    setShowDateFilter(false);
+  };
+
+  const clearServiceFilter = () => {
+    setSelectedServiceId(null);
+  };
+
+  const clearAllFilters = () => {
+    setSelectedDate(undefined);
+    setSelectedServiceId(null);
     setShowDateFilter(false);
   };
 
@@ -106,9 +170,11 @@ const ConfigSlotList = (props: Props) => {
     }
   };
 
+  // Fetch initial data
   useEffect(() => {
     fetchSlots();
-  }, [fetchSlots]);
+    fetchServices();
+  }, [fetchSlots, fetchServices]);
 
   const formatTime = (time: string) => {
     return time.substring(0, 5); // Convert HH:MM:SS to HH:MM
@@ -144,10 +210,21 @@ const ConfigSlotList = (props: Props) => {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <h3 className="text-lg font-semibold">
-                {selectedDate 
-                  ? `${filteredSlots.length} Time Slots for ${format(selectedDate, "MMM dd, yyyy")}`
-                  : `${filteredSlots.length} Time Slots`
-                }
+                {(() => {
+                  const selectedService = selectedServiceId 
+                    ? services.find(s => s.service_id === selectedServiceId) 
+                    : null;
+                  
+                  if (selectedDate && selectedService) {
+                    return `${filteredSlots.length} Slots for ${selectedService.service_name_en} on ${format(selectedDate, "MMM dd")}`;
+                  } else if (selectedDate) {
+                    return `${filteredSlots.length} Time Slots for ${format(selectedDate, "MMM dd, yyyy")}`;
+                  } else if (selectedService) {
+                    return `${filteredSlots.length} Slots for ${selectedService.service_name_en}`;
+                  } else {
+                    return `${filteredSlots.length} Time Slots`;
+                  }
+                })()}
               </h3>
               
               {/* Date Filter Controls */}
@@ -157,12 +234,12 @@ const ConfigSlotList = (props: Props) => {
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-[240px] justify-start text-left font-normal",
+                        "w-[200px] justify-start text-left font-normal",
                         !selectedDate && "text-muted-foreground"
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {selectedDate ? format(selectedDate, "PPP") : "Filter by date"}
+                      {selectedDate ? format(selectedDate, "MMM dd") : "Filter by date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -174,12 +251,32 @@ const ConfigSlotList = (props: Props) => {
                     />
                   </PopoverContent>
                 </Popover>
+
+                {/* Service Filter */}
+                <Select 
+                  value={selectedServiceId?.toString() || ""} 
+                  onValueChange={(value) => setSelectedServiceId(value ? parseInt(value) : null)}
+                >
+                  <SelectTrigger className={cn(
+                    "w-[200px]",
+                    !selectedServiceId && "text-muted-foreground"
+                  )}>
+                    <SelectValue placeholder="Filter by service" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {services.map((service) => (
+                      <SelectItem key={service.service_id} value={service.service_id.toString()}>
+                        {service.service_name_en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 
-                {selectedDate && (
+                {(selectedDate || selectedServiceId) && (
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={clearDateFilter}
+                    onClick={clearAllFilters}
                     className="h-9 px-2"
                   >
                     <X className="h-3 w-3" />
@@ -187,7 +284,7 @@ const ConfigSlotList = (props: Props) => {
                 )}
                 
                 <div className="text-sm text-muted-foreground">
-                  {selectedDate && `of ${slots.length} total`}
+                  {(selectedDate || selectedServiceId) && `of ${slots.length} total`}
                 </div>
               </div>
             </div>
@@ -222,19 +319,19 @@ const ConfigSlotList = (props: Props) => {
               <div className="text-center">
                 <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
-                  {selectedDate ? "No Slots for Selected Date" : "No Time Slots"}
+                  {(selectedDate || selectedServiceId) ? "No Slots Found" : "No Time Slots"}
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  {selectedDate 
-                    ? "No time slots found for the selected date. Try selecting a different date or create a new slot."
+                  {(selectedDate || selectedServiceId)
+                    ? "No time slots match your current filters. Try adjusting your filters or create a new slot."
                     : "Create your first time slot to get started"
                   }
                 </p>
-                {selectedDate ? (
+                {(selectedDate || selectedServiceId) ? (
                   <div className="flex gap-2 justify-center">
-                    <Button onClick={clearDateFilter} variant="outline">
+                    <Button onClick={clearAllFilters} variant="outline">
                       <Filter className="h-4 w-4 mr-2" />
-                      Clear Filter
+                      Clear Filters
                     </Button>
                     <Button onClick={props.onCreateSlot}>
                       <Plus className="h-4 w-4 mr-2" />
@@ -257,6 +354,7 @@ const ConfigSlotList = (props: Props) => {
                     <TableHead>ID</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Time</TableHead>
+                    <TableHead>Service</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -267,6 +365,12 @@ const ConfigSlotList = (props: Props) => {
                       <TableCell>{new Date(slot.booking_date).toLocaleDateString()}</TableCell>
                       <TableCell className="font-mono">
                         {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          const service = services.find(s => s.service_id === slot.reservation_id);
+                          return service ? service.service_name_en : `Service #${slot.reservation_id}`;
+                        })()}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-2 justify-end">

@@ -25,7 +25,6 @@ export const createTimeSlot = (payload: {
   start_time: string;
   status: string;
 }) => {
-  console.log("Creating time slot with payload:", payload);
   return api.post<TimeSlot>("/api/v1/appointments/create_slot", payload, {
     headers: {
       "Content-Type": "application/json"
@@ -54,4 +53,4 @@ export const updateTimeSlot = (slot_id: number, payload: {
 
 //api8 - Delete a time slot
 export const deleteTimeSlot = (slot_id: number) =>
-  api.delete(`/api/v1/appointments/slot/${slot_id}`);
+  api.delete(`/api/v1/appointments/slot/delete/${slot_id}`);

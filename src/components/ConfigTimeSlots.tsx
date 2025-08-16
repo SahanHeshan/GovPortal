@@ -129,12 +129,11 @@ const ConfigTimeSlots = (props: Props) => {
           start_time: `${formData.start_time}:00`,
           status: formData.status
         };
-        console.log("Updating slot with payload:", updatePayload);
+        
         await updateTimeSlot(props.editSlot.slot_id, updatePayload);
         setSuccess("Time slot updated successfully!");
       } else {
-        // Create new slot - use full payload
-        console.log("Creating slot with payload:", payload);
+        
         await createTimeSlot(payload);
         setSuccess("Time slot created successfully!");
       }

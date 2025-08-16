@@ -1,59 +1,78 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Search, Filter, Calendar, User, ArrowRight } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  FileText,
+  Search,
+  Filter,
+  Calendar,
+  User,
+  ArrowRight,
+} from "lucide-react";
 
 // Dummy document requests data
 const documentRequests = [
   {
     id: "DOC001",
     type: "Birth Certificate",
-    applicantName: "John Doe",
-    submittedDate: "2024-01-15",
+    applicantName: "Kamal Perera",
+    submittedDate: "2025-08-10",
     status: "pending",
     documents: ["NIC Copy", "Application Form"],
-    priority: "normal"
+    priority: "normal",
   },
   {
-    id: "DOC002", 
+    id: "DOC002",
     type: "Marriage Certificate",
-    applicantName: "Jane & Bob Smith",
-    submittedDate: "2024-01-14",
+    applicantName: "Anusha & Sunil Fernando",
+    submittedDate: "2025-08-09",
     status: "processing",
     documents: ["Marriage Registration", "NIC Copies"],
-    priority: "high"
+    priority: "high",
   },
   {
     id: "DOC003",
     type: "Business License",
-    applicantName: "Tech Solutions Ltd",
-    submittedDate: "2024-01-13",
+    applicantName: "Ceylon Tech Solutions (Pvt) Ltd",
+    submittedDate: "2025-08-08",
     status: "approved",
-    documents: ["Company Registration", "Tax Clearance"],
-    priority: "normal"
+    documents: ["Company Registration", "Tax Clearance Certificate"],
+    priority: "normal",
   },
   {
     id: "DOC004",
     type: "Land Certificate",
-    applicantName: "Alice Brown",
-    submittedDate: "2024-01-12",
+    applicantName: "Niroshan Jayawardena",
+    submittedDate: "2025-08-07",
     status: "rejected",
     documents: ["Survey Plan", "Deed"],
-    priority: "normal"
+    priority: "normal",
   },
   {
     id: "DOC005",
     type: "Death Certificate",
-    applicantName: "Charlie Wilson",
-    submittedDate: "2024-01-11",
+    applicantName: "Malini Ratnayake",
+    submittedDate: "2025-08-06",
     status: "completed",
     documents: ["Medical Report", "ID Proof"],
-    priority: "urgent"
-  }
+    priority: "urgent",
+  },
 ];
 
 export function Documents() {
@@ -61,41 +80,58 @@ export function Documents() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
 
-  const filteredRequests = documentRequests.filter(request => {
-    const matchesSearch = request.applicantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || request.status === statusFilter;
-    const matchesPriority = priorityFilter === "all" || request.priority === priorityFilter;
-    
+  const filteredRequests = documentRequests.filter((request) => {
+    const matchesSearch =
+      request.applicantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || request.status === statusFilter;
+    const matchesPriority =
+      priorityFilter === "all" || request.priority === priorityFilter;
+
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "pending": return "bg-warning/20 text-warning";
-      case "processing": return "bg-primary/20 text-primary";
-      case "approved": return "bg-success/20 text-success";
-      case "completed": return "bg-success/20 text-success";
-      case "rejected": return "bg-destructive/20 text-destructive";
-      default: return "bg-muted/20 text-muted-foreground";
+      case "pending":
+        return "bg-warning/20 text-warning";
+      case "processing":
+        return "bg-primary/20 text-primary";
+      case "approved":
+        return "bg-success/20 text-success";
+      case "completed":
+        return "bg-success/20 text-success";
+      case "rejected":
+        return "bg-destructive/20 text-destructive";
+      default:
+        return "bg-muted/20 text-muted-foreground";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "urgent": return "bg-destructive/20 text-destructive";
-      case "high": return "bg-warning/20 text-warning";
-      case "normal": return "bg-muted/20 text-muted-foreground";
-      default: return "bg-muted/20 text-muted-foreground";
+      case "urgent":
+        return "bg-destructive/20 text-destructive";
+      case "high":
+        return "bg-warning/20 text-warning";
+      case "normal":
+        return "bg-muted/20 text-muted-foreground";
+      default:
+        return "bg-muted/20 text-muted-foreground";
     }
   };
 
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Document Processing</h1>
-        <p className="text-muted-foreground">Manage document requests and submissions</p>
+        <h1 className="text-3xl font-bold text-foreground">
+          Document Processing
+        </h1>
+        <p className="text-muted-foreground">
+          Manage document requests and submissions
+        </p>
       </div>
 
       {/* Filters */}
@@ -109,7 +145,9 @@ export function Documents() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Search</label>
+              <label className="text-sm font-medium text-foreground">
+                Search
+              </label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -120,9 +158,11 @@ export function Documents() {
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Status</label>
+              <label className="text-sm font-medium text-foreground">
+                Status
+              </label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by status" />
@@ -139,7 +179,9 @@ export function Documents() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Priority</label>
+              <label className="text-sm font-medium text-foreground">
+                Priority
+              </label>
               <Select value={priorityFilter} onValueChange={setPriorityFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by priority" />
@@ -163,8 +205,12 @@ export function Documents() {
             <CardContent className="flex items-center justify-center py-12">
               <div className="text-center">
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">No Documents Found</h3>
-                <p className="text-muted-foreground">No document requests match your current filters.</p>
+                <h3 className="text-lg font-medium text-foreground mb-2">
+                  No Documents Found
+                </h3>
+                <p className="text-muted-foreground">
+                  No document requests match your current filters.
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -183,7 +229,9 @@ export function Documents() {
                         <FileText className="h-5 w-5 text-accent" />
                       </div>
                       <div>
-                        <CardTitle className="text-lg">{request.type}</CardTitle>
+                        <CardTitle className="text-lg">
+                          {request.type}
+                        </CardTitle>
                         <CardDescription className="flex items-center gap-2">
                           <User className="h-3 w-3" />
                           {request.applicantName}
@@ -213,7 +261,9 @@ export function Documents() {
                         {request.documents.length} documents
                       </div>
                     </div>
-                    <span className="text-sm font-medium text-foreground">ID: {request.id}</span>
+                    <span className="text-sm font-medium text-foreground">
+                      ID: {request.id}
+                    </span>
                   </div>
                 </CardContent>
               </Card>

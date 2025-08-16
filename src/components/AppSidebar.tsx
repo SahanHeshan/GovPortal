@@ -134,6 +134,12 @@ export function AppSidebar() {
         <SidebarFooter className="p-4">
           <Card className="p-3 bg-sidebar-accent/30">
             <div className="space-y-1 text-xs">
+              <div className="flex flex-col items-center">
+                <span className="font-medium">{user?.name_en || "N/A"}</span>
+                <span className="font-medium">{user?.name_si || "N/A"}</span>
+                <span className="font-medium">{user?.name_ta || "N/A"}</span>
+              </div>
+              <br />
               <div className="flex justify-between">
                 <span className="font-medium">Name</span>
                 <span className="text-sidebar-foreground/70">
@@ -146,12 +152,6 @@ export function AppSidebar() {
                 <span className="text-sidebar-foreground/70">
                   {user?.role || "N/A"}
                 </span>
-              </div>
-              <br />
-              <div className="flex flex-col align-right">
-                <span className="font-medium">{user?.name_en || "N/A"}</span>
-                <span className="font-medium">{user?.name_si || "N/A"}</span>
-                <span className="font-medium">{user?.name_ta || "N/A"}</span>
               </div>
             </div>
           </Card>

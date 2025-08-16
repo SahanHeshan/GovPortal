@@ -32,15 +32,26 @@ export interface TimeSlot {
   booking_date: string;
   recurrent_count: number;
 }
+export interface DocumentLink {
+  title: string;
+  uploaded_at: string;
+  url: string;
+}
+
 export interface Citizen {
   first_name: string;
   last_name: string;
   email: string;
   phone: string;
-  document_link: { title: string; url: string }[];
+  document_links: DocumentLink[];
   active: boolean;
   nic: string;
   role: string;
+  created_at: string;
+}
+
+export interface ActivateUserResponse {
+  message: string;
 }
 
 export interface ReservedUser {

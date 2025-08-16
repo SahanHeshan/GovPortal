@@ -1,5 +1,5 @@
 import { api } from "@/api/index";
-import type {  TimeSlot } from "@/api/interfaces";
+import type {  ActivateUserResponse, Citizen, TimeSlot } from "@/api/interfaces";
 
 //api3
 export const serviceSlots = (
@@ -25,6 +25,7 @@ export const createTimeSlot = (payload: {
   start_time: string;
   status: string;
 }) => {
+
   return api.post<TimeSlot>("/api/v1/appointments/create_slot", payload, {
     headers: {
       "Content-Type": "application/json"
@@ -45,12 +46,26 @@ export const updateTimeSlot = (slot_id: number, payload: {
   start_time: string;
   status: string;
 }) =>
-  api.put<TimeSlot>(`/api/v1/appointments/slot/${slot_id}`, payload, {
+  {
+    api.put<TimeSlot>(`/api/v1/appointments/slot/${slot_id}`, payload, {
     headers: {
       "Content-Type": "application/json"
     }
   });
+  }
 
 //api8 - Delete a time slot
 export const deleteTimeSlot = (slot_id: number) =>
   api.delete(`/api/v1/appointments/slot/delete/${slot_id}`);
+
+
+//api5
+export const getCitizenByRefId = (reference_id: string) =>
+  api.get<Citizen>(`/api/v1/gov/registrations/${reference_id}`);
+
+//api6
+export const activateUser = (reference_id: string) =>
+{
+  console.log(`Activating user with reference ID: ${reference_id}`);
+  return api.get<ActivateUserResponse>(`/api/v1/gov/user/activate?reference_id=${reference_id}`); 
+}

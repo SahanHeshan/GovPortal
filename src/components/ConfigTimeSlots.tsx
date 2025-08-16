@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Settings, Clock, Calendar as CalendarIcon, Plus, Save, X } from "lucide-react";
 import { createTimeSlot, updateTimeSlot } from "@/api/manage";
+import { getGovServices } from "@/api/gov";
 import { TimeSlot } from "@/api/interfaces";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,23 @@ interface TimeSlotForm {
   reserved_count: number;
   recurrent_count: number;
   status: string;
+  service_id: number | null;
+}
+
+interface Service {
+  service_id: number;
+  gov_node_id: number;
+  service_type: string;
+  service_name_si: string;
+  service_name_en: string;
+  service_name_ta: string;
+  description_si: string;
+  description_en: string;
+  description_ta: string;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+  required_document_types: number[];
 }
 
 const ConfigTimeSlots = (props: Props) => {
@@ -35,6 +53,9 @@ const ConfigTimeSlots = (props: Props) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(false);
+  const [servicesError, setServicesError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<TimeSlotForm>({
     booking_date: undefined,
@@ -43,7 +64,8 @@ const ConfigTimeSlots = (props: Props) => {
     max_capacity: 10,
     reserved_count: 0,
     recurrent_count: 1,
-    status: "available"
+    status: "available",
+    service_id: null
   });
 
   // Initialize form with edit data if provided
@@ -56,10 +78,41 @@ const ConfigTimeSlots = (props: Props) => {
         max_capacity: props.editSlot.max_capacity,
         reserved_count: props.editSlot.reserved_count,
         recurrent_count: props.editSlot.recurrent_count,
-        status: props.editSlot.status
+        status: props.editSlot.status,
+        service_id: null // Will be set when services are loaded
       });
     }
   }, [props.editSlot]);
+
+  // Fetch services when component mounts
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setServicesLoading(true);
+        setServicesError(null);
+        const response = await getGovServices(props.categoryId);
+        setServices(response.data);
+        
+        // If editing, try to find the service_id from the slot's reservation_id
+        if (props.editSlot) {
+          const matchingService = response.data.find((service: Service) => 
+            service.service_id === props.editSlot!.reservation_id
+          );
+          if (matchingService) {
+            setFormData(prev => ({ ...prev, service_id: matchingService.service_id }));
+          }
+        }
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : "Failed to fetch services";
+        setServicesError(errorMessage);
+        console.error("Error fetching services:", err);
+      } finally {
+        setServicesLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, [props.categoryId, props.editSlot]);
 
   const handleInputChange = (field: keyof TimeSlotForm, value: string | number | Date | undefined) => {
     console.log("Input change:", field, value); // Debug log
@@ -77,7 +130,8 @@ const ConfigTimeSlots = (props: Props) => {
       max_capacity: 10,
       reserved_count: 0,
       recurrent_count: 1,
-      status: "available"
+      status: "available",
+      service_id: null
     });
     setError(null);
     setSuccess(null);
@@ -90,8 +144,8 @@ const ConfigTimeSlots = (props: Props) => {
       setSuccess(null);
 
       // Validation
-      if (!formData.booking_date || !formData.start_time || !formData.end_time) {
-        setError("Please fill in all required fields");
+      if (!formData.booking_date || !formData.start_time || !formData.end_time || !formData.service_id) {
+        setError("Please fill in all required fields including service selection");
         console.log("Validation failed: Required fields are missing");
         return;
       }
@@ -113,7 +167,7 @@ const ConfigTimeSlots = (props: Props) => {
         end_time: `${formData.end_time}:00`,
         max_capacity: Number(formData.max_capacity),
         recurrent_count: Number(formData.recurrent_count),
-        reservation_id: Number(props.categoryId),
+        reservation_id: Number(formData.service_id),
         reserved_count: Number(formData.reserved_count),
         start_time: `${formData.start_time}:00`,
         status: formData.status
@@ -122,12 +176,12 @@ const ConfigTimeSlots = (props: Props) => {
       if (props.editSlot) {
         // Update existing slot - only send required fields for update API
         const updatePayload = {
-          booking_date: format(formData.booking_date, "yyyy-MM-dd"),
-          end_time: `${formData.end_time}:00`,
-          max_capacity: Number(formData.max_capacity),
-          reserved_count: Number(formData.reserved_count),
-          start_time: `${formData.start_time}:00`,
-          status: formData.status
+            booking_date: format(formData.booking_date, "yyyy-MM-dd"),
+            end_time: `${formData.end_time}:00`,
+            max_capacity: Number(formData.max_capacity),
+            reserved_count: Number(formData.reserved_count),
+            start_time: `${formData.start_time}:00`,
+            status: formData.status
         };
         
         await updateTimeSlot(props.editSlot.slot_id, updatePayload);
@@ -159,7 +213,8 @@ const ConfigTimeSlots = (props: Props) => {
 
   const isFormValid = formData.booking_date && 
                      formData.start_time.trim() !== "" && 
-                     formData.end_time.trim() !== "";
+                     formData.end_time.trim() !== "" &&
+                     formData.service_id !== null;
 
   
   
@@ -239,6 +294,35 @@ const ConfigTimeSlots = (props: Props) => {
                     />
                   </PopoverContent>
                 </Popover>
+              </div>
+
+              {/* Service Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="service_id">Service *</Label>
+                {servicesLoading ? (
+                  <div className="flex items-center gap-2">
+                    <Settings className="h-4 w-4 animate-spin" />
+                    <span className="text-sm text-muted-foreground">Loading services...</span>
+                  </div>
+                ) : servicesError ? (
+                  <div className="text-sm text-red-600">{servicesError}</div>
+                ) : (
+                  <Select 
+                    value={formData.service_id?.toString() || ""} 
+                    onValueChange={(value) => handleInputChange('service_id', parseInt(value) || null)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a service" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {services.map((service) => (
+                        <SelectItem key={service.service_id} value={service.service_id.toString()}>
+                          {service.service_name_en}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               {/* Status */}

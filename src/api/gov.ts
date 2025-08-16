@@ -4,6 +4,7 @@ import type {
   LoginResponse,
   Citizen,
   ReservedUser,
+  ActivateUserResponse,
 } from "@/api/interfaces";
 
 //api 1
@@ -35,3 +36,5 @@ export const getReservedUsers = (slot_id: string | number) =>
   api.get<ReservedUser[]>(
     `/api/v1/appointments/reserved_user/get_users/${slot_id}`
   );
+
+

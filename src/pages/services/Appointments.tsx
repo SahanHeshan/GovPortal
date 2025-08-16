@@ -121,6 +121,11 @@ export function Appointments() {
                   <Link
                     key={slot.slot_id}
                     to={`/services/appointments/${service.service_id}/${slot.slot_id}`}
+                    // pass data to the destination
+                    state={{
+                      serviceName: service.service_name_en,
+                      slotTime: slot.time,
+                    }}
                     className="block"
                   >
                     <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">

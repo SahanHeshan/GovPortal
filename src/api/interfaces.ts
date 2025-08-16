@@ -33,14 +33,16 @@ export interface TimeSlot {
   recurrent_count: number;
 }
 export interface Citizen {
+  id: number;
+  nic: string;
   first_name: string;
   last_name: string;
   email: string;
   phone: string;
-  document_link: { title: string; url: string }[];
-  active: boolean;
-  nic: string;
   role: string;
+  active: boolean;
+  document_links: { title: string; url: string; uploaded_at: string }[];
+  created_at?: string;
 }
 
 export interface ReservedUser {

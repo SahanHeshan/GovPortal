@@ -39,6 +39,8 @@ export interface DocumentLink {
 }
 
 export interface Citizen {
+  id: number;
+  nic: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -52,6 +54,11 @@ export interface Citizen {
 
 export interface ActivateUserResponse {
   message: string;
+  role: string;
+  active: boolean;
+  document_links: { title: string; url: string; uploaded_at: string }[];
+  created_at?: string;
+
 }
 
 export interface ReservedUser {
@@ -59,4 +66,24 @@ export interface ReservedUser {
   citizen_nic: string;
   reference_id: number;
   slot_id: number;
+}
+
+// Analytics
+export interface MostReservedSlotItem {
+  booking_date: string;
+  max_reserved: number;
+  start_time: string;
+}
+
+export interface PercentageChangeResponse {
+  percentage_change: number;
+}
+
+export interface TodayCountResponse {
+  today_count: number;
+}
+
+export interface OverallSatisfactionItem {
+  category_en: string;
+  avg_rating: number;
 }

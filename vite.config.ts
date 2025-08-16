@@ -8,6 +8,15 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  preview: {
+    host: "0.0.0.0",
+    port: 8080,
+    // Only allow your Azure Container App domain and all subdomains of azurecontainerapps.io
+    allowedHosts: [
+      "govconn-portal.ambitioustree-9332536f.eastasia.azurecontainerapps.io",
+      ".azurecontainerapps.io",
+    ],
+  },
   plugins: [react()],
   resolve: {
     alias: {

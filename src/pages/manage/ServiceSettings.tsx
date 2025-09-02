@@ -1,20 +1,67 @@
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Settings, Eye, EyeOff, X } from "lucide-react";
-import { getServices, createService, updateService, deleteService, getAllDocumentTypes } from "@/api/manage";
-import type { Service, CreateServiceRequest, UpdateServiceRequest, DocumentType } from "@/api/interfaces";
+import {
+  getServices,
+  createService,
+  updateService,
+  deleteService,
+  getAllDocumentTypes,
+} from "@/api/manage";
+import type {
+  Service,
+  CreateServiceRequest,
+  UpdateServiceRequest,
+  DocumentType,
+} from "@/api/interfaces";
 
 interface ServiceFormData {
   service_name_en: string;
@@ -26,6 +73,7 @@ interface ServiceFormData {
   service_type: string;
   is_active: boolean;
   required_document_types: number[];
+  updated_at: string;
 }
 
 const initialFormData: ServiceFormData = {
@@ -38,6 +86,7 @@ const initialFormData: ServiceFormData = {
   service_type: "public",
   is_active: true,
   required_document_types: [],
+  updated_at: "2023-01-01T00:00:00Z",
 };
 
 export function ServiceSettings() {
@@ -48,7 +97,9 @@ export function ServiceSettings() {
   const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [formData, setFormData] = useState<ServiceFormData>(initialFormData);
-  const [availableDocumentTypes, setAvailableDocumentTypes] = useState<DocumentType[]>([]);
+  const [availableDocumentTypes, setAvailableDocumentTypes] = useState<
+    DocumentType[]
+  >([]);
   const [documentTypesLoading, setDocumentTypesLoading] = useState(false);
 
   // Get gov_node_id from localStorage
@@ -56,7 +107,7 @@ export function ServiceSettings() {
     const userData = localStorage.getItem("user");
     if (userData) {
       const user = JSON.parse(userData);
-      return user.category_id || 0;
+      return user.id || 0;
     }
     return 0;
   };
@@ -69,7 +120,7 @@ export function ServiceSettings() {
         toast.error("Unable to determine your category ID");
         return;
       }
-      
+
       const response = await getServices(govNodeId);
       setServices(response.data);
     } catch (error) {
@@ -98,26 +149,31 @@ export function ServiceSettings() {
     loadDocumentTypes();
   }, [loadServices, loadDocumentTypes]);
 
-  const handleInputChange = (field: keyof ServiceFormData, value: string | boolean | number[]) => {
-    setFormData(prev => ({
+  const handleInputChange = (
+    field: keyof ServiceFormData,
+    value: string | boolean | number[]
+  ) => {
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const toggleDocumentType = (docId: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       required_document_types: prev.required_document_types.includes(docId)
-        ? prev.required_document_types.filter(id => id !== docId)
-        : [...prev.required_document_types, docId]
+        ? prev.required_document_types.filter((id) => id !== docId)
+        : [...prev.required_document_types, docId],
     }));
   };
 
   const removeDocumentType = (id: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      required_document_types: prev.required_document_types.filter(docId => docId !== id)
+      required_document_types: prev.required_document_types.filter(
+        (docId) => docId !== id
+      ),
     }));
   };
 
@@ -146,6 +202,7 @@ export function ServiceSettings() {
           service_name_si: formData.service_name_si,
           service_name_ta: formData.service_name_ta,
           service_type: formData.service_type,
+          updated_at: "2023-01-01T00:00:00Z",
         };
 
         await updateService(editingService.service_id, updatePayload);
@@ -206,6 +263,7 @@ export function ServiceSettings() {
       service_type: service.service_type,
       is_active: service.is_active,
       required_document_types: service.required_document_types,
+      updated_at: "2023-01-01T00:00:00Z",
     });
     setDialogOpen(true);
   };
@@ -233,8 +291,12 @@ export function ServiceSettings() {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Service Settings</h1>
-          <p className="text-muted-foreground">Manage available services and their configurations</p>
+          <h1 className="text-3xl font-bold text-foreground">
+            Service Settings
+          </h1>
+          <p className="text-muted-foreground">
+            Manage available services and their configurations
+          </p>
         </div>
         <Button onClick={handleCreate} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
@@ -256,8 +318,12 @@ export function ServiceSettings() {
           {services.length === 0 ? (
             <div className="text-center py-12">
               <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">No Services Found</h3>
-              <p className="text-muted-foreground mb-4">Get started by creating your first service</p>
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                No Services Found
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Get started by creating your first service
+              </p>
               <Button onClick={handleCreate}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Service
@@ -280,17 +346,27 @@ export function ServiceSettings() {
                   <TableRow key={index}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{service.service_name_en}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {service.service_name_si && `සි: ${service.service_name_si}`}
+                        <div className="font-medium">
+                          {service.service_name_en}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {service.service_name_ta && `த: ${service.service_name_ta}`}
+                          {service.service_name_si &&
+                            `සි: ${service.service_name_si}`}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {service.service_name_ta &&
+                            `த: ${service.service_name_ta}`}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={service.service_type === "public" ? "default" : "secondary"}>
+                      <Badge
+                        variant={
+                          service.service_type === "public"
+                            ? "default"
+                            : "secondary"
+                        }
+                      >
                         {service.service_type}
                       </Badge>
                     </TableCell>
@@ -301,21 +377,33 @@ export function ServiceSettings() {
                         ) : (
                           <EyeOff className="h-4 w-4 text-red-600" />
                         )}
-                        <Badge variant={service.is_active ? "default" : "destructive"}>
+                        <Badge
+                          variant={
+                            service.is_active ? "default" : "destructive"
+                          }
+                        >
                           {service.is_active ? "Active" : "Inactive"}
                         </Badge>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {service.required_document_types.slice(0, 3).map((docTypeId, idx) => {
-                          const docType = availableDocumentTypes.find(dt => dt.id === docTypeId);
-                          return (
-                            <Badge key={idx} variant="outline" className="text-xs">
-                              {docType?.name_en || `Doc ${docTypeId}`}
-                            </Badge>
-                          );
-                        })}
+                        {service.required_document_types
+                          .slice(0, 3)
+                          .map((docTypeId, idx) => {
+                            const docType = availableDocumentTypes.find(
+                              (dt) => dt.id === docTypeId
+                            );
+                            return (
+                              <Badge
+                                key={idx}
+                                variant="outline"
+                                className="text-xs"
+                              >
+                                {docType?.name_en || `Doc ${docTypeId}`}
+                              </Badge>
+                            );
+                          })}
                         {service.required_document_types.length > 3 && (
                           <Badge variant="outline" className="text-xs">
                             +{service.required_document_types.length - 3}
@@ -365,13 +453,12 @@ export function ServiceSettings() {
               {editingService ? "Edit Service" : "Create New Service"}
             </DialogTitle>
             <DialogDescription>
-              {editingService 
-                ? "Update the service details below" 
-                : "Fill in the details to create a new service"
-              }
+              {editingService
+                ? "Update the service details below"
+                : "Fill in the details to create a new service"}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-6">
             {/* Service Names */}
             <div className="grid gap-4">
@@ -382,7 +469,9 @@ export function ServiceSettings() {
                   <Input
                     id="name_en"
                     value={formData.service_name_en}
-                    onChange={(e) => handleInputChange("service_name_en", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("service_name_en", e.target.value)
+                    }
                     placeholder="Service name in English"
                   />
                 </div>
@@ -391,7 +480,9 @@ export function ServiceSettings() {
                   <Input
                     id="name_si"
                     value={formData.service_name_si}
-                    onChange={(e) => handleInputChange("service_name_si", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("service_name_si", e.target.value)
+                    }
                     placeholder="සේවා නාමය සිංහලෙන්"
                   />
                 </div>
@@ -400,7 +491,9 @@ export function ServiceSettings() {
                   <Input
                     id="name_ta"
                     value={formData.service_name_ta}
-                    onChange={(e) => handleInputChange("service_name_ta", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("service_name_ta", e.target.value)
+                    }
                     placeholder="சேவை பெயர் தமிழில்"
                   />
                 </div>
@@ -416,7 +509,9 @@ export function ServiceSettings() {
                   <Textarea
                     id="desc_en"
                     value={formData.description_en}
-                    onChange={(e) => handleInputChange("description_en", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("description_en", e.target.value)
+                    }
                     placeholder="Detailed description in English"
                     rows={3}
                   />
@@ -426,7 +521,9 @@ export function ServiceSettings() {
                   <Textarea
                     id="desc_si"
                     value={formData.description_si}
-                    onChange={(e) => handleInputChange("description_si", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("description_si", e.target.value)
+                    }
                     placeholder="සිංහල විස්තරය"
                     rows={3}
                   />
@@ -436,7 +533,9 @@ export function ServiceSettings() {
                   <Textarea
                     id="desc_ta"
                     value={formData.description_ta}
-                    onChange={(e) => handleInputChange("description_ta", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("description_ta", e.target.value)
+                    }
                     placeholder="தமிழ் விளக்கம்"
                     rows={3}
                   />
@@ -452,7 +551,9 @@ export function ServiceSettings() {
                   <Label htmlFor="service_type">Service Type *</Label>
                   <Select
                     value={formData.service_type}
-                    onValueChange={(value) => handleInputChange("service_type", value)}
+                    onValueChange={(value) =>
+                      handleInputChange("service_type", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select service type" />
@@ -468,7 +569,9 @@ export function ServiceSettings() {
                   <Switch
                     id="is_active"
                     checked={formData.is_active}
-                    onCheckedChange={(checked) => handleInputChange("is_active", checked)}
+                    onCheckedChange={(checked) =>
+                      handleInputChange("is_active", checked)
+                    }
                   />
                   <Label htmlFor="is_active">Active Service</Label>
                 </div>
@@ -478,34 +581,47 @@ export function ServiceSettings() {
             {/* Required Document Types */}
             <div className="grid gap-4">
               <h3 className="font-medium">Required Document Types</h3>
-              
+
               {documentTypesLoading ? (
                 <div className="flex items-center justify-center py-4">
-                  <div className="text-muted-foreground">Loading document types...</div>
+                  <div className="text-muted-foreground">
+                    Loading document types...
+                  </div>
                 </div>
               ) : (
                 <div className="grid gap-3">
                   {availableDocumentTypes.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {availableDocumentTypes.map((docType) => (
-                        <div key={docType.id} className="flex items-start space-x-3 rounded-md border p-3">
+                        <div
+                          key={docType.id}
+                          className="flex items-start space-x-3 rounded-md border p-3"
+                        >
                           <Checkbox
                             id={`doc-${docType.id}`}
-                            checked={formData.required_document_types.includes(docType.id)}
-                            onCheckedChange={() => toggleDocumentType(docType.id)}
+                            checked={formData.required_document_types.includes(
+                              docType.id
+                            )}
+                            onCheckedChange={() =>
+                              toggleDocumentType(docType.id)
+                            }
                           />
                           <div className="grid gap-1 leading-none">
-                            <Label 
+                            <Label
                               htmlFor={`doc-${docType.id}`}
                               className="font-medium cursor-pointer"
                             >
                               {docType.name_en}
                             </Label>
                             {docType.name_si && (
-                              <div className="text-sm text-muted-foreground">සි: {docType.name_si}</div>
+                              <div className="text-sm text-muted-foreground">
+                                සි: {docType.name_si}
+                              </div>
                             )}
                             {docType.name_ta && (
-                              <div className="text-sm text-muted-foreground">த: {docType.name_ta}</div>
+                              <div className="text-sm text-muted-foreground">
+                                த: {docType.name_ta}
+                              </div>
                             )}
                             <div className="text-xs text-muted-foreground mt-1">
                               {docType.description_en}
@@ -521,15 +637,23 @@ export function ServiceSettings() {
                   )}
                 </div>
               )}
-              
+
               {formData.required_document_types.length > 0 && (
                 <div>
-                  <Label className="text-sm font-medium mb-2 block">Selected Document Types:</Label>
+                  <Label className="text-sm font-medium mb-2 block">
+                    Selected Document Types:
+                  </Label>
                   <div className="flex flex-wrap gap-2">
                     {formData.required_document_types.map((docId) => {
-                      const docType = availableDocumentTypes.find(dt => dt.id === docId);
+                      const docType = availableDocumentTypes.find(
+                        (dt) => dt.id === docId
+                      );
                       return (
-                        <Badge key={docId} variant="secondary" className="flex items-center gap-1">
+                        <Badge
+                          key={docId}
+                          variant="secondary"
+                          className="flex items-center gap-1"
+                        >
                           {docType?.name_en || `Doc ${docId}`}
                           <Button
                             type="button"
@@ -566,18 +690,25 @@ export function ServiceSettings() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Service</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{serviceToDelete?.service_name_en}"? 
-              This action cannot be undone and will permanently remove the service and all its configurations.
+              Are you sure you want to delete "
+              {serviceToDelete?.service_name_en}"? This action cannot be undone
+              and will permanently remove the service and all its
+              configurations.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setDeleteDialogOpen(false);
-              setServiceToDelete(null);
-            }}>
+            <AlertDialogCancel
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setServiceToDelete(null);
+              }}
+            >
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
               Delete Service
             </AlertDialogAction>
           </AlertDialogFooter>

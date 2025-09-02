@@ -1,25 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Settings, Clock, Calendar as CalendarIcon, Plus, Save, X } from "lucide-react";
+import {
+  Settings,
+  Clock,
+  Calendar as CalendarIcon,
+  Plus,
+  Save,
+  X,
+} from "lucide-react";
 import { createTimeSlot, updateTimeSlot } from "@/api/manage";
 import { getGovServices } from "@/api/gov";
 import { TimeSlot } from "@/api/interfaces";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { TimePicker } from '@/components/TimePicker';
+import { TimePicker } from "@/components/TimePicker";
 
 type Props = {
-    categoryId: number;
-    editSlot?: TimeSlot | null;
-    onClose?: () => void;
-}
+  gov_node_id: number;
+  categoryId: number;
+  editSlot?: TimeSlot | null;
+  onClose?: () => void;
+};
 
 interface TimeSlotForm {
   booking_date: Date | undefined;
@@ -56,7 +80,7 @@ const ConfigTimeSlots = (props: Props) => {
   const [services, setServices] = useState<Service[]>([]);
   const [servicesLoading, setServicesLoading] = useState(false);
   const [servicesError, setServicesError] = useState<string | null>(null);
-  
+
   const [formData, setFormData] = useState<TimeSlotForm>({
     booking_date: undefined,
     start_time: "",
@@ -65,9 +89,18 @@ const ConfigTimeSlots = (props: Props) => {
     reserved_count: 0,
     recurrent_count: 1,
     status: "available",
-    service_id: null
+    service_id: null,
   });
 
+  // Get gov_node_id from localStorage
+  const getGovNodeId = (): number => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      const user = JSON.parse(userData);
+      return user.id || 0;
+    }
+    return 0;
+  };
   // Initialize form with edit data if provided
   useEffect(() => {
     if (props.editSlot) {
@@ -79,7 +112,7 @@ const ConfigTimeSlots = (props: Props) => {
         reserved_count: props.editSlot.reserved_count,
         recurrent_count: props.editSlot.recurrent_count,
         status: props.editSlot.status,
-        service_id: null // Will be set when services are loaded
+        service_id: null, // Will be set when services are loaded
       });
     }
   }, [props.editSlot]);
@@ -90,20 +123,25 @@ const ConfigTimeSlots = (props: Props) => {
       try {
         setServicesLoading(true);
         setServicesError(null);
-        const response = await getGovServices(props.categoryId);
+        const response = await getGovServices(getGovNodeId());
         setServices(response.data);
-        
+
         // If editing, try to find the service_id from the slot's reservation_id
         if (props.editSlot) {
-          const matchingService = response.data.find((service: Service) => 
-            service.service_id === props.editSlot!.reservation_id
+          const matchingService = response.data.find(
+            (service: Service) =>
+              service.service_id === props.editSlot!.reservation_id
           );
           if (matchingService) {
-            setFormData(prev => ({ ...prev, service_id: matchingService.service_id }));
+            setFormData((prev) => ({
+              ...prev,
+              service_id: matchingService.service_id,
+            }));
           }
         }
       } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to fetch services";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to fetch services";
         setServicesError(errorMessage);
         console.error("Error fetching services:", err);
       } finally {
@@ -114,11 +152,14 @@ const ConfigTimeSlots = (props: Props) => {
     fetchServices();
   }, [props.categoryId, props.editSlot]);
 
-  const handleInputChange = (field: keyof TimeSlotForm, value: string | number | Date | undefined) => {
+  const handleInputChange = (
+    field: keyof TimeSlotForm,
+    value: string | number | Date | undefined
+  ) => {
     console.log("Input change:", field, value); // Debug log
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -131,7 +172,7 @@ const ConfigTimeSlots = (props: Props) => {
       reserved_count: 0,
       recurrent_count: 1,
       status: "available",
-      service_id: null
+      service_id: null,
     });
     setError(null);
     setSuccess(null);
@@ -144,8 +185,15 @@ const ConfigTimeSlots = (props: Props) => {
       setSuccess(null);
 
       // Validation
-      if (!formData.booking_date || !formData.start_time || !formData.end_time || !formData.service_id) {
-        setError("Please fill in all required fields including service selection");
+      if (
+        !formData.booking_date ||
+        !formData.start_time ||
+        !formData.end_time ||
+        !formData.service_id
+      ) {
+        setError(
+          "Please fill in all required fields including service selection"
+        );
         console.log("Validation failed: Required fields are missing");
         return;
       }
@@ -158,7 +206,9 @@ const ConfigTimeSlots = (props: Props) => {
 
       if (formData.reserved_count > formData.max_capacity) {
         setError("Reserved count cannot exceed max capacity");
-        console.log("Validation failed: Reserved count cannot exceed max capacity");
+        console.log(
+          "Validation failed: Reserved count cannot exceed max capacity"
+        );
         return;
       }
 
@@ -170,31 +220,30 @@ const ConfigTimeSlots = (props: Props) => {
         reservation_id: Number(formData.service_id),
         reserved_count: Number(formData.reserved_count),
         start_time: `${formData.start_time}:00`,
-        status: formData.status
+        status: formData.status,
       };
 
       if (props.editSlot) {
         // Update existing slot - only send required fields for update API
         const updatePayload = {
-            booking_date: format(formData.booking_date, "yyyy-MM-dd"),
-            end_time: `${formData.end_time}:00`,
-            max_capacity: Number(formData.max_capacity),
-            reserved_count: Number(formData.reserved_count),
-            start_time: `${formData.start_time}:00`,
-            status: formData.status
+          booking_date: format(formData.booking_date, "yyyy-MM-dd"),
+          end_time: `${formData.end_time}:00`,
+          max_capacity: Number(formData.max_capacity),
+          reserved_count: Number(formData.reserved_count),
+          start_time: `${formData.start_time}:00`,
+          status: formData.status,
         };
-        
+
         await updateTimeSlot(props.editSlot.slot_id, updatePayload);
         setSuccess("Time slot updated successfully!");
       } else {
-        
         await createTimeSlot(payload);
         setSuccess("Time slot created successfully!");
       }
-      
+
       resetForm();
       setIsCreating(false);
-      
+
       // Close the form if onClose is provided
       if (props.onClose) {
         setTimeout(() => {
@@ -202,22 +251,22 @@ const ConfigTimeSlots = (props: Props) => {
         }, 1500); // Give time to show success message
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error 
-        ? err.message 
-        : (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to save time slot";
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : (err as { response?: { data?: { message?: string } } })?.response
+              ?.data?.message || "Failed to save time slot";
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const isFormValid = formData.booking_date && 
-                     formData.start_time.trim() !== "" && 
-                     formData.end_time.trim() !== "" &&
-                     formData.service_id !== null;
-
-  
-  
+  const isFormValid =
+    formData.booking_date &&
+    formData.start_time.trim() !== "" &&
+    formData.end_time.trim() !== "" &&
+    formData.service_id !== null;
 
   return (
     <Card>
@@ -225,12 +274,12 @@ const ConfigTimeSlots = (props: Props) => {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            {props.editSlot ? 'Edit Time Slot' : 'Create New Time Slot'}
+            {props.editSlot ? "Edit Time Slot" : "Create New Time Slot"}
           </CardTitle>
           {props.onClose && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={props.onClose}
               className="h-8 w-8 p-0"
             >
@@ -239,10 +288,9 @@ const ConfigTimeSlots = (props: Props) => {
           )}
         </div>
         <CardDescription>
-          {props.editSlot 
-            ? 'Update the details of this time slot' 
-            : 'Create and manage appointment time slots for your office'
-          }
+          {props.editSlot
+            ? "Update the details of this time slot"
+            : "Create and manage appointment time slots for your office"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -262,7 +310,8 @@ const ConfigTimeSlots = (props: Props) => {
           </Alert>
         )}
 
-        {<div className="space-y-6">
+        {
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Create New Time Slot</h3>
             </div>
@@ -281,15 +330,21 @@ const ConfigTimeSlots = (props: Props) => {
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.booking_date ? format(formData.booking_date, "PPP") : "Pick a date"}
+                      {formData.booking_date
+                        ? format(formData.booking_date, "PPP")
+                        : "Pick a date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
                       selected={formData.booking_date}
-                      onSelect={(date) => handleInputChange('booking_date', date)}
-                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      onSelect={(date) =>
+                        handleInputChange("booking_date", date)
+                      }
+                      disabled={(date) =>
+                        date < new Date(new Date().setHours(0, 0, 0, 0))
+                      }
                       initialFocus
                     />
                   </PopoverContent>
@@ -302,21 +357,28 @@ const ConfigTimeSlots = (props: Props) => {
                 {servicesLoading ? (
                   <div className="flex items-center gap-2">
                     <Settings className="h-4 w-4 animate-spin" />
-                    <span className="text-sm text-muted-foreground">Loading services...</span>
+                    <span className="text-sm text-muted-foreground">
+                      Loading services...
+                    </span>
                   </div>
                 ) : servicesError ? (
                   <div className="text-sm text-red-600">{servicesError}</div>
                 ) : (
-                  <Select 
-                    value={formData.service_id?.toString() || ""} 
-                    onValueChange={(value) => handleInputChange('service_id', parseInt(value) || null)}
+                  <Select
+                    value={formData.service_id?.toString() || ""}
+                    onValueChange={(value) =>
+                      handleInputChange("service_id", parseInt(value) || null)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a service" />
                     </SelectTrigger>
                     <SelectContent>
                       {services.map((service) => (
-                        <SelectItem key={service.service_id} value={service.service_id.toString()}>
+                        <SelectItem
+                          key={service.service_id}
+                          value={service.service_id.toString()}
+                        >
                           {service.service_name_en}
                         </SelectItem>
                       ))}
@@ -328,7 +390,10 @@ const ConfigTimeSlots = (props: Props) => {
               {/* Status */}
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => handleInputChange("status", value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -344,25 +409,25 @@ const ConfigTimeSlots = (props: Props) => {
               <div className="space-y-2">
                 <Label htmlFor="start_time">Start Time *</Label>
                 <TimePicker
-                    value={formData.start_time}
-                    onChange={(v) => handleInputChange("start_time", v)}
-                    minuteStep={5}
-                    use12Hour={true}
-                    min="09:00"
-                    max="18:00"
+                  value={formData.start_time}
+                  onChange={(v) => handleInputChange("start_time", v)}
+                  minuteStep={5}
+                  use12Hour={true}
+                  min="09:00"
+                  max="18:00"
                 />
-                </div>
+              </div>
 
               {/* End Time */}
               <div className="space-y-2">
                 <Label htmlFor="end_time">End Time *</Label>
                 <TimePicker
-                    value={formData.end_time}
-                    onChange={(v) => handleInputChange("end_time", v)}
-                    minuteStep={5}
-                    use12Hour={true}
-                    min="09:00"
-                    max="18:00"
+                  value={formData.end_time}
+                  onChange={(v) => handleInputChange("end_time", v)}
+                  minuteStep={5}
+                  use12Hour={true}
+                  min="09:00"
+                  max="18:00"
                 />
               </div>
 
@@ -374,7 +439,12 @@ const ConfigTimeSlots = (props: Props) => {
                   type="number"
                   min="1"
                   value={formData.max_capacity}
-                  onChange={(e) => handleInputChange('max_capacity', parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "max_capacity",
+                      parseInt(e.target.value) || 0
+                    )
+                  }
                   placeholder="10"
                 />
               </div>
@@ -388,7 +458,12 @@ const ConfigTimeSlots = (props: Props) => {
                   min="0"
                   max={formData.max_capacity}
                   value={formData.reserved_count}
-                  onChange={(e) => handleInputChange('reserved_count', parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "reserved_count",
+                      parseInt(e.target.value) || 0
+                    )
+                  }
                   placeholder="0"
                 />
               </div>
@@ -402,7 +477,12 @@ const ConfigTimeSlots = (props: Props) => {
                     type="number"
                     min="0"
                     value={formData.recurrent_count}
-                    onChange={(e) => handleInputChange('recurrent_count', parseInt(e.target.value) || 0)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "recurrent_count",
+                        parseInt(e.target.value) || 0
+                      )
+                    }
                     placeholder="0"
                     className="w-full md:w-48"
                   />
@@ -414,10 +494,8 @@ const ConfigTimeSlots = (props: Props) => {
             </div>
 
             <div className="flex justify-end gap-4">
-              
-              
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setIsCreating(false);
                   resetForm();
@@ -426,7 +504,7 @@ const ConfigTimeSlots = (props: Props) => {
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={handleSubmit}
                 disabled={!isFormValid || loading}
                 className="flex items-center gap-2"
@@ -436,16 +514,20 @@ const ConfigTimeSlots = (props: Props) => {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {loading 
-                  ? (props.editSlot ? "Updating..." : "Creating...")
-                  : (props.editSlot ? "Update Time Slot" : "Create Time Slot")
-                }
+                {loading
+                  ? props.editSlot
+                    ? "Updating..."
+                    : "Creating..."
+                  : props.editSlot
+                  ? "Update Time Slot"
+                  : "Create Time Slot"}
               </Button>
             </div>
-          </div>}
+          </div>
+        }
       </CardContent>
-    </Card>       
+    </Card>
   );
-}
+};
 
 export default ConfigTimeSlots;

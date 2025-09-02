@@ -1,5 +1,13 @@
 import { api } from "@/api/index";
-import type { ActivateUserResponse, Citizen, CreateServiceRequest, Service, TimeSlot, UpdateServiceRequest, DocumentType } from "@/api/interfaces";
+import type {
+  ActivateUserResponse,
+  Citizen,
+  CreateServiceRequest,
+  Service,
+  TimeSlot,
+  UpdateServiceRequest,
+  DocumentType,
+} from "@/api/interfaces";
 
 //api3
 export const serviceSlots = (
@@ -25,65 +33,71 @@ export const createTimeSlot = (payload: {
   start_time: string;
   status: string;
 }) => {
-
   return api.post<TimeSlot>("/api/v1/appointments/create_slot", payload, {
     headers: {
-      "Content-Type": "application/json"
-    }
+      "Content-Type": "application/json",
+    },
   });
-}
+};
 
 //api6 - Get a specific time slot
 export const getTimeSlot = (slot_id: number) =>
   api.get<TimeSlot>(`/api/v1/appointments/slot/${slot_id}`);
 
 //api7 - Update a time slot
-export const updateTimeSlot = (slot_id: number, payload: {
-  booking_date: string;
-  end_time: string;
-  max_capacity: number;
-  reserved_count: number;
-  start_time: string;
-  status: string;
-}) =>
-  {
-    api.put<TimeSlot>(`/api/v1/appointments/slot/${slot_id}`, payload, {
-    headers: {
-      "Content-Type": "application/json"
-    }
-  });
+export const updateTimeSlot = (
+  slot_id: number,
+  payload: {
+    booking_date: string;
+    end_time: string;
+    max_capacity: number;
+    reserved_count: number;
+    start_time: string;
+    status: string;
   }
+) => {
+  api.put<TimeSlot>(`/api/v1/appointments/slot/${slot_id}`, payload, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+};
 
 //api8 - Delete a time slot
 export const deleteTimeSlot = (slot_id: number) =>
   api.delete(`/api/v1/appointments/slot/delete/${slot_id}`);
-
 
 //api5
 export const getCitizenByRefId = (reference_id: string) =>
   api.get<Citizen>(`/api/v1/gov/registrations/${reference_id}`);
 
 //api6
-export const activateUser = (reference_id: string) =>
-{
+export const activateUser = (reference_id: string) => {
   console.log(`Activating user with reference ID: ${reference_id}`);
-  return api.get<ActivateUserResponse>(`/api/v1/gov/user/activate?reference_id=${reference_id}`); 
-}
+  return api.get<ActivateUserResponse>(
+    `/api/v1/gov/user/activate?reference_id=${reference_id}`
+  );
+};
 
 //api5 - Get services for a specific gov node
 export const getServices = (govNodeId: number) =>
   api.get<Service[]>(`/api/v1/gov/services/${govNodeId}`);
 
 //api6 - Create a new service
-export const createService = (payload: CreateServiceRequest) =>
-{
+export const createService = (payload: CreateServiceRequest) => {
   console.log("Creating service with payload:", payload);
-  return api.post<Service>("/api/v1/gov/services/create", payload);
-}
+  return api.post<Service>("/api/v1/gov/services/create", payload, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+};
 
 //api7 - Update an existing service
-export const updateService = (serviceId: number, payload: UpdateServiceRequest) =>
-  api.put<Service>(`/api/v1/gov/services/${serviceId}`, payload);
+export const updateService = (
+  serviceId: number,
+  payload: UpdateServiceRequest
+) => api.put<Service>(`/api/v1/gov/services/${serviceId}`, payload);
 
 //api8 - Delete a service
 export const deleteService = (serviceId: number) =>

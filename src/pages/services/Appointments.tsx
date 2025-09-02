@@ -158,7 +158,7 @@ export function Appointments() {
                   <CalendarIcon className="h-5 w-5 text-primary" />
                   {service.service_name_en}
                 </CardTitle>
-                <CardDescription>{service.description_en}</CardDescription>
+                {/* <CardDescription>{service.description_en}</CardDescription> */}
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">

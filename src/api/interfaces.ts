@@ -57,7 +57,6 @@ export interface ActivateUserResponse {
   active: boolean;
   document_links: { title: string; url: string; uploaded_at: string }[];
   created_at?: string;
-
 }
 
 export interface ReservedUser {
@@ -66,7 +65,6 @@ export interface ReservedUser {
   reference_id: number;
   slot_id: number;
 }
-
 
 export interface Service {
   service_id?: number;
@@ -107,6 +105,7 @@ export interface UpdateServiceRequest {
   service_name_si: string;
   service_name_ta: string;
   service_type: string;
+  updated_at: string;
 }
 
 export interface DocumentType {
@@ -118,7 +117,6 @@ export interface DocumentType {
   description_si: string;
   description_ta: string;
 }
-
 
 // Analytics
 export interface MostReservedSlotItem {

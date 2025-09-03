@@ -97,7 +97,12 @@ export const createService = (payload: CreateServiceRequest) => {
 export const updateService = (
   serviceId: number,
   payload: UpdateServiceRequest
-) => api.put<Service>(`/api/v1/gov/services/${serviceId}`, payload);
+) =>
+  api.put<Service>(`/api/v1/gov/services/${serviceId}`, payload, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
 //api8 - Delete a service
 export const deleteService = (serviceId: number) =>
